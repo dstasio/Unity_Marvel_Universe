@@ -26,15 +26,18 @@ public class player_base : MonoBehaviour
     
     private void Awake() {
         ForceMagnitude = WalkStrength;
-        
+
         Controls = new game_controls();
         Controller = GetComponent<CharacterController>();
 
         Controls.InGame.Move.performed += ctx => SetForce(ctx.ReadValue<Vector2>());
-        Controls.InGame.Move.canceled += _ => ForceDir = Vector2.zero;
+        Controls.InGame.Move.canceled  += _ => ForceDir = Vector2.zero;
 
         Controls.InGame.Run.performed += _ => ForceMagnitude = WalkStrength*RunMultiplier;
         Controls.InGame.Run.canceled  += _ => ForceMagnitude = WalkStrength;
+
+        Controls.InGame.Jump.performed += _ => { ForceDir.y = Controller.isGrounded ? JumpForce : 0; };
+        Controls.InGame.Jump.canceled  += _ => ForceDir.y = 0;
     }
 
     void SetForce(v2 Input)
@@ -53,20 +56,22 @@ public class player_base : MonoBehaviour
     void Update()
     {
         v3 Force = ForceDir*ForceMagnitude;
+        Force.y = ForceDir.y;
         Body.LookAt(Body.position + new Vector3(Force.x, 0, Force.z));
         
         float Weight = Mass * 9.81f;
         float FrictionCoefficient = FrictionCoefficientGround;
         v3 Friction = -dPos * Weight * FrictionCoefficient;
-        //if (IsGrounded)
-        //{
+        if (Controller.isGrounded)
+        {
             Friction.y = 0;
-        //}
-        //else
-        //{
-        //    Friction.y = -Mass*Gravity;
-        //    Force.y = 0;
-        //}
+        }
+        else
+        {
+            Friction.y = -Mass*Gravity;
+            ForceDir.y += Friction.y;
+            Force.y += Friction.y;
+        }
         v3 TotalForce = Force + Friction;
         ddPos = TotalForce / Mass;
     }
