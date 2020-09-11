@@ -10,6 +10,7 @@ public class camera : MonoBehaviour
     public float CameraDistance = 3f, CameraOffsetFactor = 0.33f;
     private float Pitch = 0f, Yaw = 0f;
 
+    game_controls Controls;
     public Vector2 Input;
     void Awake()
     {
@@ -18,6 +19,10 @@ public class camera : MonoBehaviour
         transform.localPosition = new Vector3(0.0f, 1.0f, -CameraDistance);
         transform.localPosition += transform.right * CameraOffsetFactor;
         transform.LookAt(PlayerBody.position + new Vector3(0, PlayerHeadHeight, 0));
+
+        Controls = new game_controls();
+        Controls.InGame.RotateCamera.performed += ctx => Input = ctx.ReadValue<Vector2>();
+        Controls.InGame.RotateCamera.canceled += _ => Input = Vector2.zero;
     }
 
     void Update()
@@ -44,5 +49,13 @@ public class camera : MonoBehaviour
         transform.LookAt(PlayerBody);
         transform.LookAt(PlayerBody.position + new Vector3(0, PlayerHeadHeight, 0));
         transform.localPosition += transform.right * CameraOffsetFactor;
+    }
+
+    private void OnEnable() {
+        Controls.Enable();
+    }
+
+    private void OnDisable() {
+        Controls.Disable();
     }
 }

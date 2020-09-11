@@ -41,6 +41,14 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Run"",
+                    ""type"": ""Button"",
+                    ""id"": ""c2918156-83a7-4168-ac51-74c0aae76657"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -61,7 +69,7 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Keyboard>/w"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Keyboard_Mouse"",
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
@@ -72,7 +80,7 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Keyboard_Mouse"",
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
@@ -83,7 +91,7 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Keyboard>/a"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Keyboard_Mouse"",
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
@@ -94,7 +102,7 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Keyboard>/d"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Keyboard_Mouse"",
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
@@ -105,7 +113,7 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Gamepad>/leftStick"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Gamepad"",
                     ""action"": ""Move"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -116,18 +124,7 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Gamepad>/rightStick"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
-                    ""action"": ""RotateCamera"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""6b22c574-f11a-4c06-b9cb-d5aaec4299fe"",
-                    ""path"": ""<Mouse>/delta"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Gamepad"",
                     ""action"": ""RotateCamera"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -138,7 +135,7 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Gamepad"",
                     ""action"": ""Jump"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
@@ -149,8 +146,19 @@ public class @game_controls : IInputActionCollection, IDisposable
                     ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
-                    ""groups"": ""Spider-Man"",
+                    ""groups"": ""Keyboard_Mouse"",
                     ""action"": ""Jump"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1fe81d35-60d7-41ba-b081-ea90e2faed8f"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Run"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -159,21 +167,22 @@ public class @game_controls : IInputActionCollection, IDisposable
     ],
     ""controlSchemes"": [
         {
-            ""name"": ""Spider-Man"",
-            ""bindingGroup"": ""Spider-Man"",
+            ""name"": ""Gamepad"",
+            ""bindingGroup"": ""Gamepad"",
             ""devices"": [
                 {
                     ""devicePath"": ""<Gamepad>"",
                     ""isOptional"": false,
                     ""isOR"": false
-                },
+                }
+            ]
+        },
+        {
+            ""name"": ""Keyboard_Mouse"",
+            ""bindingGroup"": ""Keyboard_Mouse"",
+            ""devices"": [
                 {
                     ""devicePath"": ""<Keyboard>"",
-                    ""isOptional"": true,
-                    ""isOR"": false
-                },
-                {
-                    ""devicePath"": ""<Mouse>"",
                     ""isOptional"": false,
                     ""isOR"": false
                 },
@@ -191,6 +200,7 @@ public class @game_controls : IInputActionCollection, IDisposable
         m_InGame_Move = m_InGame.FindAction("Move", throwIfNotFound: true);
         m_InGame_RotateCamera = m_InGame.FindAction("RotateCamera", throwIfNotFound: true);
         m_InGame_Jump = m_InGame.FindAction("Jump", throwIfNotFound: true);
+        m_InGame_Run = m_InGame.FindAction("Run", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -243,6 +253,7 @@ public class @game_controls : IInputActionCollection, IDisposable
     private readonly InputAction m_InGame_Move;
     private readonly InputAction m_InGame_RotateCamera;
     private readonly InputAction m_InGame_Jump;
+    private readonly InputAction m_InGame_Run;
     public struct InGameActions
     {
         private @game_controls m_Wrapper;
@@ -250,6 +261,7 @@ public class @game_controls : IInputActionCollection, IDisposable
         public InputAction @Move => m_Wrapper.m_InGame_Move;
         public InputAction @RotateCamera => m_Wrapper.m_InGame_RotateCamera;
         public InputAction @Jump => m_Wrapper.m_InGame_Jump;
+        public InputAction @Run => m_Wrapper.m_InGame_Run;
         public InputActionMap Get() { return m_Wrapper.m_InGame; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -268,6 +280,9 @@ public class @game_controls : IInputActionCollection, IDisposable
                 @Jump.started -= m_Wrapper.m_InGameActionsCallbackInterface.OnJump;
                 @Jump.performed -= m_Wrapper.m_InGameActionsCallbackInterface.OnJump;
                 @Jump.canceled -= m_Wrapper.m_InGameActionsCallbackInterface.OnJump;
+                @Run.started -= m_Wrapper.m_InGameActionsCallbackInterface.OnRun;
+                @Run.performed -= m_Wrapper.m_InGameActionsCallbackInterface.OnRun;
+                @Run.canceled -= m_Wrapper.m_InGameActionsCallbackInterface.OnRun;
             }
             m_Wrapper.m_InGameActionsCallbackInterface = instance;
             if (instance != null)
@@ -281,17 +296,29 @@ public class @game_controls : IInputActionCollection, IDisposable
                 @Jump.started += instance.OnJump;
                 @Jump.performed += instance.OnJump;
                 @Jump.canceled += instance.OnJump;
+                @Run.started += instance.OnRun;
+                @Run.performed += instance.OnRun;
+                @Run.canceled += instance.OnRun;
             }
         }
     }
     public InGameActions @InGame => new InGameActions(this);
-    private int m_SpiderManSchemeIndex = -1;
-    public InputControlScheme SpiderManScheme
+    private int m_GamepadSchemeIndex = -1;
+    public InputControlScheme GamepadScheme
     {
         get
         {
-            if (m_SpiderManSchemeIndex == -1) m_SpiderManSchemeIndex = asset.FindControlSchemeIndex("Spider-Man");
-            return asset.controlSchemes[m_SpiderManSchemeIndex];
+            if (m_GamepadSchemeIndex == -1) m_GamepadSchemeIndex = asset.FindControlSchemeIndex("Gamepad");
+            return asset.controlSchemes[m_GamepadSchemeIndex];
+        }
+    }
+    private int m_Keyboard_MouseSchemeIndex = -1;
+    public InputControlScheme Keyboard_MouseScheme
+    {
+        get
+        {
+            if (m_Keyboard_MouseSchemeIndex == -1) m_Keyboard_MouseSchemeIndex = asset.FindControlSchemeIndex("Keyboard_Mouse");
+            return asset.controlSchemes[m_Keyboard_MouseSchemeIndex];
         }
     }
     public interface IInGameActions
@@ -299,5 +326,6 @@ public class @game_controls : IInputActionCollection, IDisposable
         void OnMove(InputAction.CallbackContext context);
         void OnRotateCamera(InputAction.CallbackContext context);
         void OnJump(InputAction.CallbackContext context);
+        void OnRun(InputAction.CallbackContext context);
     }
 }

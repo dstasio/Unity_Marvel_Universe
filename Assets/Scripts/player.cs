@@ -36,11 +36,8 @@ public class player : MonoBehaviour
     void Awake()
     {
         Controls = new game_controls();
-        Controls.InGame.RotateCamera.performed += ctx => Camera.Input = ctx.ReadValue<Vector2>();
-        Controls.InGame.RotateCamera.canceled += _ => Camera.Input = Vector2.zero;
 
-        Controls.InGame.Move.performed += ctx => SetForce(ctx.ReadValue<Vector2>());
-        Controls.InGame.Move.canceled += _ => Force = Vector2.zero;
+        
 
         Controls.InGame.Jump.performed += _ => { Force.y = IsGrounded ? JumpForce : 0; };
         Controls.InGame.Jump.canceled += _ => Force.y = 0;
