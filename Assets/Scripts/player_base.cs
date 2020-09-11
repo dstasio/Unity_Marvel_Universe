@@ -10,34 +10,32 @@ public class player_base : MonoBehaviour
     public camera Camera;
     public Transform Body;
 
-    float WalkStrength = 3500.0f;
-    float RunMultiplier = 3.0f;
-    public float Mass = 70;
-    public float FrictionCoefficientGround = 0.9f;
-    public float JumpForce = 13000f;
+    public float Acceleration = 120.0f;
+    float Friction;
+    public float WalkingFriction = 10.0f;
+    public float RunningFriction = 7.0f;
     public float Gravity = 26f;
 
     game_controls Controls;
     v2 Input;
-    v3 ForceDir;
-    float ForceMagnitude;
     v3 ddPos;
     v3 dPos;
+    float speed;
     
     private void Awake() {
-        ForceMagnitude = WalkStrength;
-
+        Friction = WalkingFriction;
         Controls = new game_controls();
         Controller = GetComponent<CharacterController>();
 
         Controls.InGame.Move.performed += ctx => SetForce(ctx.ReadValue<Vector2>());
-        Controls.InGame.Move.canceled  += _ => ForceDir = Vector2.zero;
+        Controls.InGame.Move.canceled  += _ => ddPos = Vector2.zero;
 
-        Controls.InGame.Run.performed += _ => ForceMagnitude = WalkStrength*RunMultiplier;
-        Controls.InGame.Run.canceled  += _ => ForceMagnitude = WalkStrength;
+        Controls.InGame.Run.performed += _ => Friction = RunningFriction;
+        Controls.InGame.Run.canceled  += _ => Friction = WalkingFriction;
 
-        Controls.InGame.Jump.performed += _ => { ForceDir.y = Controller.isGrounded ? JumpForce : 0; };
-        Controls.InGame.Jump.canceled  += _ => ForceDir.y = 0;
+        //Controls.InGame.Jump.performed += _ => { ForceDir.y = Controller.isGrounded ? JumpForce : 0; };
+        //Controls.InGame.Jump.canceled  += _ => ForceDir.y = 0;
+        Controls.InGame.Jump.performed += _ => {dPos = v2.zero; ddPos = v2.zero;};
     }
 
     void SetForce(v2 Input)
@@ -49,51 +47,35 @@ public class player_base : MonoBehaviour
         Forward.y = 0;
         Forward.Normalize();
         v3 Direction = Input.x*Right + Input.y*Forward;
-        ForceDir.x = Direction.x;
-        ForceDir.z = Direction.z;
+        ddPos.x = Direction.x;
+        ddPos.z = Direction.z;
     }
 
     void Update()
     {
-        v3 Force = ForceDir*ForceMagnitude;
-        Force.y = ForceDir.y;
-        Body.LookAt(Body.position + new Vector3(Force.x, 0, Force.z));
+        v3 dd = ddPos*Acceleration - dPos*Friction;
+        Body.LookAt(Body.position + new Vector3(dd.x, 0, dd.z));
         
-        float Weight = Mass * 9.81f;
-        float FrictionCoefficient = FrictionCoefficientGround;
-        v3 Friction = -dPos * Weight * FrictionCoefficient;
-        if (Controller.isGrounded)
-        {
-            Friction.y = 0;
-        }
-        else
-        {
-            Friction.y = -Mass*Gravity;
-            ForceDir.y += Friction.y;
-            Force.y += Friction.y;
-        }
-        v3 TotalForce = Force + Friction;
-        ddPos = TotalForce / Mass;
-    }
 
-    private void FixedUpdate() {
-        float t = Time.fixedDeltaTime;
+        float t = Time.deltaTime;
 
-        v3 Step = dPos*t + 0.5f*ddPos*t*t;
-
-        //transform.position += Step;
-        Controller.Move(Step);
-        dPos += ddPos*t;
-
+        v3 Step = dPos*t + 0.5f*dd*t*t;
+        dPos += dd*t;
+        //if (Controller.isGrounded)
+        //{
+        //    ddPos -= dPos;
+        //}
         if (dPos.magnitude < 0.01)
         {
             dPos = Vector2.zero;
         }
+
+        Controller.Move(Step);
+        speed = dPos.magnitude / 3.6f;
     }
 
     private void OnEnable() {
         Controls.Enable();
-        //Controls.KeyboardMouseScheme.
     }
 
     private void OnDisable() {
