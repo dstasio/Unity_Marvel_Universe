@@ -6,15 +6,20 @@ using v3 = UnityEngine.Vector3;
 
 public class player_base : MonoBehaviour
 {
+    int LAYER_GROUND = 1 << 8;
+
     public CharacterController Controller;
     public camera Camera;
     public Transform Body;
+    public Material solid_red;
 
-    public float Acceleration = 120.0f;
     float Friction;
+    bool IsGrounded;
     public float WalkingFriction = 10.0f;
     public float RunningFriction = 7.0f;
-    public float Gravity = 26f;
+    public float Gravity = 9.81f;
+    public float WalkingThrust = 120.0f;
+    public float JumpVelocity = 10.0f;
 
     game_controls Controls;
     v2 Input;
@@ -28,14 +33,12 @@ public class player_base : MonoBehaviour
         Controller = GetComponent<CharacterController>();
 
         Controls.InGame.Move.performed += ctx => SetForce(ctx.ReadValue<Vector2>());
-        Controls.InGame.Move.canceled  += _ => ddPos = Vector2.zero;
+        Controls.InGame.Move.canceled  += _ => {ddPos.x = 0; ddPos.z = 0;};
 
-        Controls.InGame.Run.performed += _ => Friction = RunningFriction;
-        Controls.InGame.Run.canceled  += _ => Friction = WalkingFriction;
+        Controls.InGame.Run.performed  += _ => Friction = RunningFriction;
+        Controls.InGame.Run.canceled   += _ => Friction = WalkingFriction;
 
-        //Controls.InGame.Jump.performed += _ => { ForceDir.y = Controller.isGrounded ? JumpForce : 0; };
-        //Controls.InGame.Jump.canceled  += _ => ForceDir.y = 0;
-        Controls.InGame.Jump.performed += _ => {dPos = v2.zero; ddPos = v2.zero;};
+        Controls.InGame.Jump.performed += _ => { if (Controller.isGrounded) {dPos.y = JumpVelocity;}};
     }
 
     void SetForce(v2 Input)
@@ -53,24 +56,55 @@ public class player_base : MonoBehaviour
 
     void Update()
     {
-        v3 dd = ddPos*Acceleration - dPos*Friction;
-        Body.LookAt(Body.position + new Vector3(dd.x, 0, dd.z));
-        
+        if (IsGrounded)
+        {
+            solid_red.color = new Color(1, 1, 0, 1);
+        }
+        else
+        {
+            solid_red.color = new Color(1, 0, 0, 1);
+        }
 
         float t = Time.deltaTime;
 
-        v3 Step = dPos*t + 0.5f*dd*t*t;
-        dPos += dd*t;
-        //if (Controller.isGrounded)
-        //{
-        //    ddPos -= dPos;
-        //}
-        if (dPos.magnitude < 0.01)
+        Body.LookAt(Body.position + new Vector3(ddPos.x, 0, ddPos.z));
+        if (ddPos.y > -Gravity)
         {
-            dPos = Vector2.zero;
+            ddPos.y -= Gravity*t;
+        }
+        if (ddPos.y < -Gravity)
+        {
+            ddPos.y = -Gravity;
+        }
+        v3 Acceleration = ddPos*WalkingThrust - dPos*Friction;
+        Acceleration.y = ddPos.y;
+
+        v3 Step = dPos*t + 0.5f*Acceleration*t*t;
+        dPos += Acceleration*t;
+        
+        if (Mathf.Abs(dPos.x) < 0.01)
+        {
+            dPos.x = 0;
+        }
+        if (Mathf.Abs(dPos.z) < 0.01)
+        {
+            dPos.z = 0;
         }
 
-        Controller.Move(Step);
+        if (Step.sqrMagnitude >= Controller.minMoveDistance*Controller.minMoveDistance)
+        {
+            Controller.Move(Step);
+            if (Controller.isGrounded)
+            {
+                IsGrounded = true;
+                dPos.y = 0;
+            }
+            else
+            {
+                IsGrounded = false;
+            }
+        }
+
         speed = dPos.magnitude / 3.6f;
     }
 
