@@ -97,7 +97,7 @@ public class player_base : MonoBehaviour
             if (Controller.isGrounded)
             {
                 IsGrounded = true;
-                dPos.y = 0;
+                dPos.y = -Gravity;
             }
             else
             {
