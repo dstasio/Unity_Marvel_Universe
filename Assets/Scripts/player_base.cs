@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using v2 = UnityEngine.Vector2;
 using v3 = UnityEngine.Vector3;
+using static input;
 
 public class player_base : MonoBehaviour
 {
-    int LAYER_GROUND = 1 << 8;
-
     public CharacterController Controller;
     public camera Camera;
     public Transform Body;
     public Material solid_red;
+    Animator PlayerAnimator;
+    input Input;
 
     float Friction;
     bool IsGrounded;
@@ -22,48 +23,70 @@ public class player_base : MonoBehaviour
     public float JumpVelocity = 10.0f;
 
     game_controls Controls;
-    v2 Input;
     v3 ddPos;
     v3 dPos;
-    float speed;
+    float speed_kmph;
     
     private void Awake() {
         Friction = WalkingFriction;
         Controls = new game_controls();
         Controller = GetComponent<CharacterController>();
+        PlayerAnimator = GetComponentInChildren<Animator>();
 
-        Controls.InGame.Move.performed += ctx => SetForce(ctx.ReadValue<Vector2>());
-        Controls.InGame.Move.canceled  += _ => {ddPos.x = 0; ddPos.z = 0;};
+        Controls.InGame.Move.performed += ctx => Input.Move = ctx.ReadValue<v2>();
+        Controls.InGame.Move.canceled  += _ => Input.Move = v2.zero;
 
-        Controls.InGame.Run.performed  += _ => Friction = RunningFriction;
-        Controls.InGame.Run.canceled   += _ => Friction = WalkingFriction;
+        Controls.InGame.Run.performed  += _ => Input.Run = true;
+        Controls.InGame.Run.canceled   += _ => Input.Run = false;
 
-        Controls.InGame.Jump.performed += _ => { if (Controller.isGrounded) {dPos.y = JumpVelocity;}};
+        Controls.InGame.Jump.performed += _ => Input.Jump = true;
+        Controls.InGame.Jump.canceled  += _ => Input.Jump = false;
     }
 
-    void SetForce(v2 Input)
+    void SetForce(v2 Dir)
     {
-        v3 Right = Camera.transform.right;
-        Right.y = 0;
-        Right.Normalize();
-        v3 Forward = Camera.transform.forward;
-        Forward.y = 0;
-        Forward.Normalize();
-        v3 Direction = Input.x*Right + Input.y*Forward;
-        ddPos.x = Direction.x;
-        ddPos.z = Direction.z;
+        if (Dir == v2.zero)
+        {
+            ddPos.x = 0;
+            ddPos.z = 0;
+        }
+        else
+        {
+            v3 Right = Camera.transform.right;
+            Right.y = 0;
+            Right.Normalize();
+            v3 Forward = Camera.transform.forward;
+            Forward.y = 0;
+            Forward.Normalize();
+            v3 Force = Dir.x*Right + Dir.y*Forward;
+            ddPos.x = Force.x;
+            ddPos.z = Force.z;
+        }
     }
 
     void Update()
     {
-        if (IsGrounded)
+        // ================================
+        // Processing input
+        // ================================
+        SetForce(Input.Move);
+        Friction = Input.Run ? RunningFriction : WalkingFriction;
+        if (Input.Jump && Controller.isGrounded)
         {
-            solid_red.color = new Color(1, 1, 0, 1);
+            dPos.y = JumpVelocity;
         }
-        else
-        {
-            solid_red.color = new Color(1, 0, 0, 1);
-        }
+
+        // ================================
+        // Updating player
+        // ================================
+        //if (IsGrounded)
+        //{
+        //    solid_red.color = new Color(1, 1, 0, 1);
+        //}
+        //else
+        //{
+        //    solid_red.color = new Color(1, 0, 0, 1);
+        //}
 
         float t = Time.deltaTime;
 
@@ -105,7 +128,8 @@ public class player_base : MonoBehaviour
             }
         }
 
-        speed = dPos.magnitude / 3.6f;
+        speed_kmph = dPos.magnitude / 3.6f;
+        PlayerAnimator.SetFloat("Speed", (dPos.x*dPos.x + dPos.z*dPos.z));
     }
 
     private void OnEnable() {
