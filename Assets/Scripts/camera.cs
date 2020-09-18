@@ -8,7 +8,7 @@ public class camera : MonoBehaviour
     public Transform PlayerBody;
     public float PlayerHeadHeight = 1.8f;
     public float CameraDistance = 3f, CameraOffsetFactor = 0.33f;
-    private float Pitch = 0f, Yaw = 0f;
+    private float Pitch = 0f, Yaw = -Mathf.PI/2.0f;
 
     game_controls Controls;
     public Vector2 Input;

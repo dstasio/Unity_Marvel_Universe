@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using v2 = UnityEngine.Vector2;
 using v3 = UnityEngine.Vector3;
-using static input;
 
 public class player_base : MonoBehaviour
 {
@@ -114,7 +113,7 @@ public class player_base : MonoBehaviour
             dPos.z = 0;
         }
 
-        if (Step.sqrMagnitude >= Controller.minMoveDistance*Controller.minMoveDistance)
+        if ( false && Step.sqrMagnitude >= Controller.minMoveDistance*Controller.minMoveDistance)
         {
             Controller.Move(Step);
             if (Controller.isGrounded)
