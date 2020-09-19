@@ -92,6 +92,7 @@ public class player_base : MonoBehaviour
             PendulumTangential = v3.zero;
             PendulumNormal = v3.zero;
             RopeLength = 0;
+            SwingAnchor = v3.zero;
         }
         if (Input.Jump && IsGrounded)
         {
@@ -104,7 +105,7 @@ public class player_base : MonoBehaviour
         v3 Step = v3.zero;
         if (IsSwinging)
         {
-            Step += Swing(p.position, t);
+            Step += Swing(SwingAnchor, t);
         }
         else
         {
@@ -123,10 +124,10 @@ public class player_base : MonoBehaviour
             {
                 IsGrounded = false;
                 if (IsSwinging) {
-                    if (v3.Distance(transform.position, p.position) > RopeLength)
+                    if (v3.Distance(transform.position, SwingAnchor) > RopeLength)
                     {
-                        v3 Rope = (transform.position - p.position).normalized * RopeLength;
-                        transform.position = p.position + Rope;
+                        v3 Rope = (transform.position - SwingAnchor).normalized * RopeLength;
+                        transform.position = SwingAnchor + Rope;
                     }
                 }
             }
@@ -167,8 +168,12 @@ public class player_base : MonoBehaviour
     v3 PendulumTangential = v3.zero;
     v3 PendulumNormal = v3.zero;
     float RopeLength = 0;
-    public Transform p;
+    v3 SwingAnchor = v3.zero;
     private v3 Swing(v3 Pivot, float dt) {
+        if (Pivot == v3.zero) {
+            SwingAnchor = transform.position + Body.forward*10.0f + Body.up*15.0f;
+            Pivot = SwingAnchor;
+        }
         List<Vector3> pos = new List<Vector3>();
         pos.Add(Pivot);
         pos.Add(transform.position);
