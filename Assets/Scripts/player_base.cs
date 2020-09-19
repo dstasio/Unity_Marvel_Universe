@@ -24,13 +24,19 @@ public class player_base : MonoBehaviour
     game_controls Controls;
     v3 ddPos;
     v3 dPos;
+    bool IsSwinging;
     float speed_kmph;
     
+    LineRenderer lineRenderer;
     private void Awake() {
         Friction = WalkingFriction;
         Controls = new game_controls();
         Controller = GetComponent<CharacterController>();
         PlayerAnimator = GetComponentInChildren<Animator>();
+        lineRenderer = GetComponent<LineRenderer>();
+        lineRenderer.startWidth = 0.01f;
+        lineRenderer.endWidth = 0.01f;
+        lineRenderer.useWorldSpace = true;
 
         Controls.InGame.Move.performed += ctx => Input.Move = ctx.ReadValue<v2>();
         Controls.InGame.Move.canceled  += _ => Input.Move = v2.zero;
@@ -69,51 +75,43 @@ public class player_base : MonoBehaviour
         // Processing input
         // ================================
         SetForce(Input.Move);
-        Friction = Input.Run ? RunningFriction : WalkingFriction;
-        if (Input.Jump && Controller.isGrounded)
+        if (Input.Run) {
+            if (IsGrounded) {
+                Friction = RunningFriction;
+            }
+            else {
+                IsSwinging = true;
+            }
+        }
+        else {
+            if (IsSwinging) {
+                ddPos.y = -Gravity;
+            }
+            Friction = WalkingFriction;
+            IsSwinging = false;
+            PendulumTangential = v3.zero;
+            PendulumNormal = v3.zero;
+            RopeLength = 0;
+        }
+        if (Input.Jump && IsGrounded)
         {
             dPos.y = JumpVelocity;
         }
 
-        // ================================
-        // Updating player
-        // ================================
-        //if (IsGrounded)
-        //{
-        //    solid_red.color = new Color(1, 1, 0, 1);
-        //}
-        //else
-        //{
-        //    solid_red.color = new Color(1, 0, 0, 1);
-        //}
-
         float t = Time.deltaTime;
 
         Body.LookAt(Body.position + new Vector3(ddPos.x, 0, ddPos.z));
-        if (ddPos.y > -Gravity)
+        v3 Step = v3.zero;
+        if (IsSwinging)
         {
-            ddPos.y -= Gravity*t;
+            Step += Swing(p.position, t);
         }
-        if (ddPos.y < -Gravity)
+        else
         {
-            ddPos.y = -Gravity;
-        }
-        v3 Acceleration = ddPos*WalkingThrust - dPos*Friction;
-        Acceleration.y = ddPos.y;
-
-        v3 Step = dPos*t + 0.5f*Acceleration*t*t;
-        dPos += Acceleration*t;
-        
-        if (Mathf.Abs(dPos.x) < 0.01)
-        {
-            dPos.x = 0;
-        }
-        if (Mathf.Abs(dPos.z) < 0.01)
-        {
-            dPos.z = 0;
+            Step += Walk(t);
         }
 
-        if ( false && Step.sqrMagnitude >= Controller.minMoveDistance*Controller.minMoveDistance)
+        if (Step.sqrMagnitude >= Controller.minMoveDistance * Controller.minMoveDistance)
         {
             Controller.Move(Step);
             if (Controller.isGrounded)
@@ -124,11 +122,82 @@ public class player_base : MonoBehaviour
             else
             {
                 IsGrounded = false;
+                if (IsSwinging) {
+                    if (v3.Distance(transform.position, p.position) > RopeLength)
+                    {
+                        v3 Rope = (transform.position - p.position).normalized * RopeLength;
+                        transform.position = p.position + Rope;
+                    }
+                }
             }
         }
 
         speed_kmph = dPos.magnitude / 3.6f;
-        PlayerAnimator.SetFloat("Speed", (dPos.x*dPos.x + dPos.z*dPos.z));
+        PlayerAnimator.SetFloat("Speed", (dPos.x * dPos.x + dPos.z * dPos.z));
+    }
+
+    private v3 Walk(float dt)
+    {
+        if (ddPos.y > -Gravity)
+        {
+            ddPos.y -= Gravity * dt;
+        }
+        if (ddPos.y < -Gravity)
+        {
+            ddPos.y = -Gravity;
+        }
+        v3 Acceleration = ddPos * WalkingThrust - dPos * Friction;
+        Acceleration.y = ddPos.y;
+
+        v3 Step = dPos * dt + 0.5f * Acceleration * dt * dt;
+        dPos += Acceleration * dt;
+
+        if (Mathf.Abs(dPos.x) < 0.01)
+        {
+            dPos.x = 0;
+        }
+        if (Mathf.Abs(dPos.z) < 0.01)
+        {
+            dPos.z = 0;
+        }
+
+        return Step;
+    }
+
+    v3 PendulumTangential = v3.zero;
+    v3 PendulumNormal = v3.zero;
+    float RopeLength = 0;
+    public Transform p;
+    private v3 Swing(v3 Pivot, float dt) {
+        List<Vector3> pos = new List<Vector3>();
+        pos.Add(Pivot);
+        pos.Add(transform.position);
+        lineRenderer.SetPositions(pos.ToArray());
+        
+        v3 Rope = (transform.position - Pivot);
+        if (RopeLength == 0)
+        {
+            RopeLength = Rope.magnitude;
+        }
+        if (PendulumNormal == v3.zero) {
+            PendulumNormal = (v3.Cross(Rope, v3.down)).normalized;
+        }
+        if (PendulumTangential == v3.zero)
+        {
+            PendulumTangential = (v3.Cross(v3.down, PendulumNormal)).normalized;
+        }
+
+        float FCentrifugal = (dPos.sqrMagnitude*(1.0f - Mathf.Pow(v3.Dot(Rope.normalized, v3.Cross(-Rope, PendulumNormal).normalized), 2))) / RopeLength;
+        
+        v3 T = (Pivot - transform.position).normalized;
+        T *= v3.Dot(v3.up*Gravity, T) + FCentrifugal;
+        ddPos = v3.down*Gravity + T;
+
+        v3 StartPoint = transform.position;
+        v3 Step = dPos*dt + 0.5f*ddPos*dt*dt;
+        dPos += ddPos*dt;
+
+        return Step;
     }
 
     private void OnEnable() {
